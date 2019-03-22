@@ -52,9 +52,11 @@ public class Docosh {
         final String weaveNamePattern = compose.getParent().getFileName().toString() + "_%s_" + weaveIndex;
         final Collection<DockerComposeParser.Image> images = parser.extractImages(compose);
         Stream.concat(
+            Stream.concat(
+                    Stream.of("#", "# Generated with Docosh, https://github.com/rmannibucau/docosh.git", "#"),
                     images
                       .stream()
-                      .flatMap(image -> generator.generateCommands(image.getService(), image.getImage(), String.format(weaveNamePattern, image))),
+                      .flatMap(image -> generator.generateCommands(image.getService(), image.getImage(), String.format(weaveNamePattern, image)))),
                     Stream.of(
                             list("services", images, DockerComposeParser.Image::getService),
                             list("images", images, DockerComposeParser.Image::getImage)))
