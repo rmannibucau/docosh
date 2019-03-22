@@ -21,7 +21,9 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
+import java.util.Objects;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.apache.xbean.finder.ClassLoaders;
 import org.apache.xbean.finder.archive.Archive;
@@ -57,6 +59,11 @@ public class Feature_Reflections implements Feature {
                 jar.getName().startsWith("tomitribe-crest-0");
     }
 
+    // todo: config
+    private Stream<String> findAdditionalClasses() { // for primitive conversion in params
+        return Stream.of("com.sun.beans.finder.PropertyEditorFinder");
+    }
+
     @Override
     public void beforeAnalysis(final BeforeAnalysisAccess access) {
         try {
@@ -67,13 +74,15 @@ public class Feature_Reflections implements Feature {
                          .map(url -> ClasspathArchive.archive(loader, url))
                          .collect(toList())),
                     createArchiveFilter());
-            archive.forEach(entry -> {
-                final Class<?> clazz = access.findClassByName(entry.getName());
-                if (clazz != null
-                        && Stream.of(AutomaticFeature.class, TargetClass.class).noneMatch(clazz::isAnnotationPresent)) {
-                    registerModel(clazz);
-                }
-            });
+            Stream.concat(
+                    StreamSupport.stream(archive.spliterator(), false).map(Archive.Entry::getName),
+                    findAdditionalClasses())
+                  .map(access::findClassByName).filter(Objects::nonNull)
+                  .forEach(clazz -> {
+                      if (Stream.of(AutomaticFeature.class, TargetClass.class).noneMatch(clazz::isAnnotationPresent)) {
+                          registerModel(clazz);
+                      }
+                  });
         } catch (final IOException e) {
             throw new IllegalStateException(e);
         }

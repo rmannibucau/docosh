@@ -15,14 +15,14 @@
  */
 package com.github.rmannibucau.docker.compose.cli;
 
-import static java.util.Collections.singletonMap;
-
+import java.util.HashMap;
 import java.util.Map;
 
 import org.tomitribe.crest.Main;
 import org.tomitribe.crest.environments.Environment;
 import org.tomitribe.crest.environments.SystemEnvironment;
 
+import com.github.rmannibucau.docker.compose.cli.service.CommandGenerator;
 import com.github.rmannibucau.docker.compose.cli.service.DockerComposeParser;
 
 public class Launcher {
@@ -32,7 +32,10 @@ public class Launcher {
     }
 
     public static void main(final String... args) throws Exception {
-        final Map<Class<?>, Object> services = singletonMap(DockerComposeParser.class, new DockerComposeParser());
+        final Map<Class<?>, Object> services = new HashMap<>();
+        services.put(DockerComposeParser.class, new DockerComposeParser());
+        services.put(CommandGenerator.class, new CommandGenerator());
+
         final SystemEnvironment environment = new SystemEnvironment(services);
         Environment.ENVIRONMENT_THREAD_LOCAL.set(environment);
         new Main().main(environment, args);

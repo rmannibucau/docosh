@@ -15,21 +15,12 @@
  */
 package com.github.rmannibucau.docker.compose.cli.editor;
 
-import java.beans.PropertyEditorManager;
-import java.nio.file.Path;
+import java.beans.PropertyEditorSupport;
 
-public class GlobalEditors {
-    static {
-        PropertyEditorManager.registerEditor(Path.class, PathEditor.class);
-        PropertyEditorManager.registerEditor(Boolean.class, BooleanEditor.class);
-        PropertyEditorManager.registerEditor(Integer.class, IntegerEditor.class);
-    }
+public class IntegerEditor extends PropertyEditorSupport {
 
-    private GlobalEditors() {
-        // no-op
-    }
-
-    public static void load() {
-        // no-op
+    @Override
+    public void setAsText(final String text) throws IllegalArgumentException {
+        setValue(Integer.parseInt(text));
     }
 }
