@@ -56,7 +56,7 @@ public class Docosh {
                     Stream.of("#", "# Generated with Docosh, https://github.com/rmannibucau/docosh.git", "#"),
                     images
                       .stream()
-                      .flatMap(image -> generator.generateCommands(image.getService(), image.getImage(), String.format(weaveNamePattern, image)))),
+                      .flatMap(image -> generator.generateCommands(image.getService(), image.getImage(), String.format(weaveNamePattern, image.getService())))),
                     Stream.of(
                             list("services", images, DockerComposeParser.Image::getService),
                             list("images", images, DockerComposeParser.Image::getImage)))
