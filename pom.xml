@@ -37,6 +37,11 @@
       <version>${graalvm.version}</version>
       <scope>provided</scope>
     </dependency>
+    <dependency> <!-- to simplify graalvm integration, NOT for crest, todo: extract it in a lib -->
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-finder-shaded</artifactId>
+      <version>4.12</version>
+    </dependency>
     <dependency>
       <groupId>org.tomitribe</groupId>
       <artifactId>tomitribe-crest</artifactId>
@@ -74,6 +79,13 @@
         </configuration>
       </plugin>
       <plugin>
+        <!--
+          todo: write a custom maven plugin to
+            1. download graalvm,
+            2. put it in maven repo
+            3. add svm customizations instead of requiring them in the project
+            4. run the commands with good options
+        -->
         <groupId>com.oracle.substratevm</groupId>
         <artifactId>native-image-maven-plugin</artifactId>
         <version>${graalvm.version}</version>

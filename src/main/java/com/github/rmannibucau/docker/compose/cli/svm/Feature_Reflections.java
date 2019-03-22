@@ -15,49 +15,74 @@
  */
 package com.github.rmannibucau.docker.compose.cli.svm;
 
+import static java.util.stream.Collectors.toList;
+
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Field;
 import java.util.stream.Stream;
 
+import org.apache.xbean.finder.ClassLoaders;
+import org.apache.xbean.finder.archive.Archive;
+import org.apache.xbean.finder.archive.ClasspathArchive;
+import org.apache.xbean.finder.archive.CompositeArchive;
+import org.apache.xbean.finder.archive.FilteredArchive;
+import org.apache.xbean.finder.filter.Filter;
+import org.apache.xbean.finder.filter.Filters;
+import org.apache.xbean.finder.util.Files;
 import org.graalvm.nativeimage.Feature;
 import org.graalvm.nativeimage.RuntimeReflection;
-import org.tomitribe.crest.cmds.processors.Help;
-import org.tomitribe.crest.cmds.processors.OptionParam;
-import org.tomitribe.crest.cmds.targets.SimpleBean;
 
-import com.github.rmannibucau.docker.compose.cli.command.Docosh;
-import com.github.rmannibucau.docker.compose.cli.editor.GlobalEditors;
-import com.github.rmannibucau.docker.compose.cli.editor.PathEditor;
-import com.github.rmannibucau.docker.compose.cli.loader.DocoshLoader;
-import com.github.rmannibucau.docker.compose.cli.service.DockerComposeParser;
 import com.oracle.svm.core.annotate.AutomaticFeature;
+import com.oracle.svm.core.annotate.TargetClass;
 
 // register reflection meta we need for this app
 @AutomaticFeature
 public class Feature_Reflections implements Feature {
+    // todo: config extraction
+    private Filter createArchiveFilter() {
+        return Filters.prefixes(
+                // app
+                "com.github.rmannibucau.docker.compose.cli",
+                // crest
+                "org.tomitribe.crest.cmds.targets.SimpleBean",
+                "org.tomitribe.crest.cmds.processors.OptionParam",
+                "org.tomitribe.crest.cmds.processors.Help");
+    }
+
+    // todo: move it to some plugin config
+    private boolean isIncludedFile(final File jar) {
+        return jar.getName().startsWith("docosh") ||
+                jar.getName().startsWith("tomitribe-crest-0");
+    }
 
     @Override
     public void beforeAnalysis(final BeforeAnalysisAccess access) {
-        // todo: it is at build time so we can use an AnnotationFinder
         try {
-            Stream.of(
-                    // app
-                    Docosh.class, DocoshLoader.class, GlobalEditors.class, PathEditor.class, DockerComposeParser.class,
-                    // crest
-                    Help.class, SimpleBean.class, OptionParam.class,
-                    SimpleBean.class.getClassLoader().loadClass("org.tomitribe.crest.cmds.CmdMethod$ComplexParam"))
-                  .forEach(this::registerApi);
-        } catch (ClassNotFoundException e) {
+            final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            final Archive archive = new FilteredArchive(new CompositeArchive(
+                    ClassLoaders.findUrls(loader).stream()
+                         .filter(url -> isIncludedFile(Files.toFile(url)))
+                         .map(url -> ClasspathArchive.archive(loader, url))
+                         .collect(toList())),
+                    createArchiveFilter());
+            archive.forEach(entry -> {
+                final Class<?> clazz = access.findClassByName(entry.getName());
+                if (clazz != null
+                        && Stream.of(AutomaticFeature.class, TargetClass.class).noneMatch(clazz::isAnnotationPresent)) {
+                    registerModel(clazz);
+                }
+            });
+        } catch (final IOException e) {
             throw new IllegalStateException(e);
         }
     }
 
-    private void registerApi(final Class<?> clazz) {
+    private void registerModel(final Class<?> clazz) {
         RuntimeReflection.register(clazz);
-        try {
-            RuntimeReflection.registerForReflectiveInstantiation(clazz);
-        } catch (final IllegalArgumentException iae) {
-            // no-op
-        }
-        RuntimeReflection.register(Stream.of(clazz.getMethods()).toArray(Executable[]::new));
+        RuntimeReflection.register(Stream.of(clazz.getDeclaredConstructors()).toArray(Executable[]::new));
+        RuntimeReflection.register(Stream.of(clazz.getDeclaredFields()).toArray(Field[]::new));
+        RuntimeReflection.register(Stream.of(clazz.getDeclaredMethods()).toArray(Executable[]::new));
     }
 }
