@@ -1,0 +1,14 @@
+= Docosh
+
+Simple docker-compose tool to generate some nice aliases.
+
+
+== Build
+
+WARNING: don't forget to use GRAALVM
+
+[source,sh]
+----
+JAVA_HOME=~/softwares/graalvm-ce-1.0.0-rc14 mvn clean install
+----
+
