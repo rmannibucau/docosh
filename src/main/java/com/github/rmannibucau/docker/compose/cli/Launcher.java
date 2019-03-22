@@ -20,7 +20,6 @@ import static java.util.Collections.singletonMap;
 import java.util.Map;
 
 import org.tomitribe.crest.Main;
-import org.tomitribe.crest.environments.Environment;
 import org.tomitribe.crest.environments.SystemEnvironment;
 
 import com.github.rmannibucau.docker.compose.cli.service.DockerComposeParser;
@@ -34,7 +33,7 @@ public class Launcher {
     public static void main(final String... args) throws Exception {
         final Map<Class<?>, Object> services = singletonMap(DockerComposeParser.class, new DockerComposeParser());
         final SystemEnvironment environment = new SystemEnvironment(services);
-        Environment.ENVIRONMENT_THREAD_LOCAL.set(environment);
+        // Environment.ENVIRONMENT_THREAD_LOCAL.set(environment); // this makes it work
         new Main().main(environment, args);
     }
 }
