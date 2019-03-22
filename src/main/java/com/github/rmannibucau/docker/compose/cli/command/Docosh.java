@@ -30,8 +30,6 @@ public class Docosh {
     public void listImages(@Out final PrintStream stdout,
                            @Option("docker-compose") final Path compose,
                            final DockerComposeParser parser) {
-        stdout.println(parser);
-        stdout.println(compose);
         final Collection<String> images = parser.extractImages(compose);
         images.forEach(stdout::println);
     }

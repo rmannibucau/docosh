@@ -80,7 +80,7 @@
       </plugin>
       <plugin>
         <!--
-          todo: write a custom maven plugin to
+          todo: write a custom maven plugin to - reported to graalvm, let see if fixed
             1. download graalvm,
             2. put it in maven repo
             3. add svm customizations instead of requiring them in the project
@@ -100,7 +100,8 @@
         </executions>
         <configuration>
           <mainClass>com.github.rmannibucau.docker.compose.cli.Launcher</mainClass>
-          <buildArgs>-H:Name=${project.artifactId}-${project.version} -H:-UseServiceLoaderFeature -H:+StackTrace -H:+ReportExceptionStackTraces --verbose --no-server</buildArgs>
+          <imageName>${project.artifactId}-${project.version}</imageName>
+          <buildArgs>-H:-UseServiceLoaderFeature -H:+StackTrace -H:+ReportExceptionStackTraces --verbose</buildArgs>
         </configuration>
       </plugin>
     </plugins>
